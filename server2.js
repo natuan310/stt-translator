@@ -1,18 +1,17 @@
-"use strict";
+var http = require('http');
+var url = require('url');
+var fs = require('fs');
+const { type } = require('os');
+var server;
 
-require('dotenv').config();
 
-const fs = require('fs');
-const url = require('url');
-const http = require('http');
-const { argv } = require('process');
-const server = http.createServer(function (req, res) {
+server = http.createServer(function (req, res) {
+    // your normal server code
     var path = url.parse(req.url).pathname;
     switch (path) {
         case '/':
             res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.write('<h1>Hello!</h1>');
-            res.write('<a href="socket.html">Transcription</a>');
+            res.write('<h1>Hello! Try the <a href="/socket.html">Test page</a></h1>');
             res.end();
             break;
         case '/socket.html':
@@ -28,16 +27,14 @@ const server = http.createServer(function (req, res) {
         default: send404(res);
     }
 }),
+
     send404 = function (res) {
         res.writeHead(404);
         res.write('404');
         res.end();
     };
+
 server.listen(8001);
-
-const io = require('socket.io')(server)
-var ss = require('socket.io-stream');
-
 
 // GCP projectID which has Speech-To-Text and Cloud Translation API
 const projectId = 'quick-glow-272202';
@@ -48,7 +45,6 @@ const { Translate } = require('@google-cloud/translate').v2;
 // Instantiates a client
 const translate = new Translate({ projectId });
 
-// Function to translate text
 async function eng2jap(sourceText = '') {
     // The target language
     const source_lang = 'en';
@@ -57,19 +53,15 @@ async function eng2jap(sourceText = '') {
     // Translates some text into Japanese
     const [translation] = await translate.translate(sourceText, target_lang);
     const [re_translation] = await translate.translate(translation, source_lang);
-    // console.log(`Source: ${sourceText}`);
-    // console.log(`Japanese: ${translation}`);
-    // console.log(`Re-translate: ${re_translation}`);
-    // socket.emit('transcript', {
-    //     'translation': translation,
-    //     're_translation': re_translation
-    // });
+    console.log(`Source: ${sourceText}`);
+    console.log(`Japanese: ${translation}`);
+    console.log(`Re-translate: ${re_translation}`);
     return { translation, re_translation };
 }
 
-// Function to transcript speech
-function transcription(
-    socket,
+
+
+function main(
     encoding = 'LINEAR16',
     sampleRateHertz = 16000,
     languageCode = 'en-US',
@@ -133,7 +125,7 @@ function transcription(
         setTimeout(restartStream, streamingLimit);
     }
 
-    const speechCallback = async stream => {
+    const speechCallback = stream => {
         // Convert API result end time from seconds + nanoseconds to milliseconds
         resultEndTime =
             stream.results[0].resultEndTime.seconds * 1000 +
@@ -147,8 +139,8 @@ function transcription(
         process.stdout.cursorTo(0);
 
         let stdoutText = '';
-        // let translated = '';
-        // let re_translate = '';
+        let translated = '';
+        let re_translate = '';
         if (stream.results[0] && stream.results[0].alternatives[0]) {
 
             stdoutText =
@@ -159,29 +151,20 @@ function transcription(
         if (stream.results[0].isFinal) {
             process.stdout.write(chalk.green(`${stdoutText}\n`));
 
-            // return stdoutText;
-            // eng2jap(stdoutText);
-            let res = await eng2jap(stdoutText);
-            // console.log(res)
-            translated = res.translation;
-            re_translate = res.re_translation;
-            process.stdout.write(chalk.yellow(`${translated}\n`));
-            process.stdout.write(chalk.magenta(`${re_translate}\n`));
-            
-            socket.emit('transcript', {
-                'translation': translated,
-                're_translation': re_translate
-            });
-            // io.on('connection', socket => {
-            //     socket.emit('transcript', {
-            //         'translation': translated,
-            //         're_translation': re_translate
-            //     });
-            // }); 
+            eng2jap(stdoutText);
 
-            // socket.io-stream
-            // ss(socket).emit('transcript', stream);
-            // stream.pipe(res)
+            // let res = eng2jap(stdoutText);
+            // console.log(res)
+            // translated = res.translation;
+            // re_translate = res.re_translation;
+            // console.log(translated)
+            // console.log(re_translate)
+            // process.stdout.write(chalk.yellow(`${translated}\n`));
+            // process.stdout.write(chalk.magenta(`${re_translate}\n`));
+
+            io.sockets.on('connection', function (socket) {
+                socket.emit('transcript', { 'transcript': stdoutText });
+            });
 
             isFinalEndTime = resultEndTime;
             lastTranscriptWasFinal = true;
@@ -296,11 +279,38 @@ process.on('unhandledRejection', err => {
     process.exitCode = 1;
 });
 
-let translated = '';
-let re_translate = '';
 
 
-io.on('connection', socket => {
-    // navigator.mediaDevices.getUserMedia({'audio':true});
-    transcription(socket);
-})
+// use socket.io
+var io = require('socket.io').listen(server);
+
+//turn off debug
+io.set('log level', 1);
+
+var message = '';
+
+// define interactions with client
+io.sockets.on('connection', function (socket) {
+    main(...process.argv.slice(2));
+
+    // transcript = streaming.speechCallback;
+    // console.log(transcript);
+    // if (transcript) {
+    //     console.log(transcript);
+    // }
+    //send data to client
+    setInterval(function () {
+        socket.emit('date', { 'date': new Date() });
+    }, 1000);
+
+    //recieve client data
+    socket.on('client_data', function (data) {
+        message += data.letter;
+        setInterval(function () {
+            process.stdout.write(message);
+            message = '';
+        }, 5000);
+    });
+
+
+});

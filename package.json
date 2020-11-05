@@ -5,14 +5,19 @@
   "main": "index.js",
   "dependencies": {
     "chalk": "^4.1.0",
+    "dotenv": "^8.2.0",
+    "navigator": "^1.0.1",
     "node-record-lpcm16": "^1.0.1",
-    "socket.io": "^2.3.0"
+    "socket.io": "^2.3.0",
+    "socket.io-stream": "^0.9.1"
   },
   "devDependencies": {
     "concurrently": "^3.5.1",
-    "http-server": "^0.12.1"
+    "http-server": "^0.12.1",
+    "nodemon": "^2.0.6"
   },
   "scripts": {
+    "devStart": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "concurrently \"http-server -a 0.0.0.0 -p 9999 -c-1 -o index.html\"",
     "https": "concurrently \"http-server -a 0.0.0.0 -p 9999 -c-1 -S -C localhost.crt -K localhost.key -o https://localhost:9999/index.html\""
