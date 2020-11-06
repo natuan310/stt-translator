@@ -1,4 +1,7 @@
-node_modules/
 __pycache__/
 server2.js
 .vscode/
+*.py
+infiniteStreaming.js
+streamingaudio.js
+user_info.txt

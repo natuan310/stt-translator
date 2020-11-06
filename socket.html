@@ -12,6 +12,8 @@
         integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js"></script>
+    <link href="//fonts.googleapis.com/css?family=Roboto:300,400,500,700" rel="stylesheet" type="text/css">
+    <!-- <link rel="stylesheet" href="../../../css/main.css"> -->
 
 </head>
 
@@ -19,23 +21,14 @@
     <!-- socket.io -->
     <script>
         var socket = io.connect();
-        socket.on('date', function (data) {
-            $('#date').text(data.date);
-        });
-
-        $(document).ready(function () {
-            $('#text').keypress(function (e) {
-                socket.emit('client_data', { 'letter': String.fromCharCode(e.charCode) });
-            });
-        });
 
         socket.on('transcript', function (data) {
             $('#translation').text(data.translation);
             $('#re_translation').text(data.re_translation);
         });
     </script>
-    <div id="date"></div>
-
+    <!-- <button id="startBtn">Start streaming</button>
+    <audio id="gum-local" controls autoplay></audio> -->
     <div class="row">
         <div class="col">
             <h3>Japanese</h3>
@@ -49,6 +42,9 @@
 
 
     <!-- Optional JavaScript -->
+    <!-- <script src="js/socket.js" defer></script>
+
+    <script src="../../../js/lib/ga.js"></script> -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
         integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
@@ -59,6 +55,8 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
         integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
         crossorigin="anonymous"></script>
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+    <script src="../js/socket.js" defer></script>
 </body>
 
 </html>
