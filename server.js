@@ -6,6 +6,8 @@ const fs = require('fs');
 const url = require('url');
 const http = require('http');
 const { argv } = require('process');
+
+
 const server = http.createServer(function (req, res) {
     var path = url.parse(req.url).pathname;
     switch (path) {
@@ -36,7 +38,7 @@ const server = http.createServer(function (req, res) {
 server.listen(8001);
 
 const io = require('socket.io')(server)
-var ss = require('socket.io-stream');
+// var ss = require('socket.io-stream');
 
 
 // GCP projectID which has Speech-To-Text and Cloud Translation API
@@ -301,6 +303,5 @@ let re_translate = '';
 
 
 io.on('connection', socket => {
-    // navigator.mediaDevices.getUserMedia({'audio':true});
     transcription(socket);
 })
